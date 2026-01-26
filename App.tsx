@@ -1,305 +1,193 @@
+import React, { useMemo, useState } from 'react';
+import storyData from './data/story.json';
+import itemsData from './data/items.json';
+import { Choice, GameLogEntry, StoryData, StoryNode, PlayerState, ItemsData } from './types';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import GameCanvas from './components/GameCanvas';
-import { GameState, Player, Appearance, Stats, Weapon } from './types';
-import { generatePowerUps, generateDeathMessage } from './services/geminiService';
+const story = storyData as StoryData;
+const items = itemsData as ItemsData;
 
-const INITIAL_APPEARANCE: Appearance = {
-  robeColor: '#6366f1',
-  hatStyle: 'pointy',
-  beardStyle: 'short'
-};
-
-const INITIAL_STATS: Stats = {
-  intelligence: 5,
-  mana: 5,
-  health: 5
-};
-
-const GUN_WEAPON: Weapon = {
-  name: "Arcane Peacemaker",
-  type: 'gun',
-  damage: 10,
-  fireRate: 300,
-  lastShot: 0,
-  bulletSpeed: 7,
-  spread: 0.05,
-  color: "#60a5fa",
-  description: "A standard-issue magical revolver.",
-  bulletType: 'arcane'
-};
-
-const STAFF_WEAPON: Weapon = {
-  name: "Tome-Caster Staff",
-  type: 'staff',
-  damage: 25,
-  fireRate: 600,
-  lastShot: 0,
-  bulletSpeed: 5,
-  spread: 0.1,
-  color: "#f97316",
-  description: "Shoots enchanted fire-books.",
-  bulletType: 'firebook'
-};
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 const App: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>('START');
-  const [appearance, setAppearance] = useState<Appearance>(INITIAL_APPEARANCE);
-  const [stats, setStats] = useState<Stats>(INITIAL_STATS);
-  const [startingSpell, setStartingSpell] = useState<'fireball' | 'frostbolt' | 'heal'>('fireball');
-  const [player, setPlayer] = useState<Player | null>(null);
-  const [powerUpOptions, setPowerUpOptions] = useState<any[]>([]);
-  const [loadingAI, setLoadingAI] = useState(false);
-  const [deathMessage, setDeathMessage] = useState("");
-  const [score, setScore] = useState(0);
+  const [currentNodeId, setCurrentNodeId] = useState<string>(story.start);
+  const [player, setPlayer] = useState<PlayerState>({
+    stats: { ...story.player.stats },
+    inventory: [...story.player.inventory],
+  });
+  const [log, setLog] = useState<GameLogEntry[]>([]);
 
-  const startCustomization = () => setGameState('CUSTOMIZE');
-
-  const finalizePlayer = () => {
-    const maxHP = stats.health * 20;
-    
-    const initialStaff = { ...STAFF_WEAPON };
-    if (startingSpell === 'frostbolt') {
-      initialStaff.name = "Glacial Staff";
-      initialStaff.bulletType = 'frost' as any;
-      initialStaff.color = '#38bdf8';
-    } else if (startingSpell === 'heal') {
-      initialStaff.name = "Life-Giver Staff";
-      initialStaff.bulletType = 'heal' as any;
-      initialStaff.color = '#4ade80';
-    }
-
-    const newPlayer: Player = {
-      pos: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
-      health: maxHP,
-      maxHealth: maxHP,
-      xp: 0,
-      level: 1,
-      appearance,
-      stats,
-      weapons: [GUN_WEAPON, initialStaff],
-      currentWeaponIndex: 0
-    };
-    
-    newPlayer.weapons.forEach(w => w.damage *= (1 + stats.intelligence * 0.1));
-    newPlayer.weapons.forEach(w => w.fireRate *= (1.2 - stats.mana * 0.05));
-
-    setPlayer(newPlayer);
-    setScore(0);
-    setGameState('PLAYING');
-  };
-
-  const handleLevelUp = useCallback(async (currentLevel: number) => {
-    // If they finish Level 10, they win!
-    if (currentLevel >= 10) {
-      setGameState('WIN');
-      return;
-    }
-    
-    setGameState('LEVEL_UP');
-    setLoadingAI(true);
-    const options = await generatePowerUps(currentLevel + 1);
-    setPowerUpOptions(options);
-    setLoadingAI(false);
+  const currentNode = story.nodes[currentNodeId] as StoryNode;
+  const itemIndex = useMemo(() => {
+    return new Map(items.items.map((item) => [item.id, item]));
   }, []);
 
-  const handleWin = useCallback((finalScore: number) => {
-    setScore(finalScore);
-    setGameState('WIN');
-  }, []);
-
-  const handleGameOver = useCallback(async (finalScore: number, finalLevel: number) => {
-    setScore(finalScore);
-    setGameState('GAME_OVER');
-    const msg = await generateDeathMessage(finalScore, finalLevel);
-    setDeathMessage(msg);
-  }, []);
-
-  const selectPowerUp = (choice: any) => {
-    if (!player) return;
-    setPlayer(prev => {
-      if (!prev) return null;
-      const updated = { ...prev };
-      updated.weapons.forEach(w => {
-        if (choice.attributeAffected === 'damage') w.damage *= choice.multiplier;
-        if (choice.attributeAffected === 'fireRate') w.fireRate *= choice.multiplier;
-        if (choice.attributeAffected === 'bulletSpeed') w.bulletSpeed *= choice.multiplier;
-      });
-      if (choice.attributeAffected === 'maxHealth') {
-        updated.maxHealth *= choice.multiplier;
-        updated.health = updated.maxHealth;
-      }
-      if (choice.attributeAffected === 'health') {
-          updated.health = Math.min(updated.maxHealth, updated.health + 50);
-      }
-      // Increment level after powerup
-      return { ...updated, level: updated.level + 1, xp: 0 };
+  const resetGame = () => {
+    setCurrentNodeId(story.start);
+    setPlayer({
+      stats: { ...story.player.stats },
+      inventory: [...story.player.inventory],
     });
-    setGameState('PLAYING');
+    setLog([]);
   };
+
+  const meetsRequirement = (choice: Choice) => {
+    if (!choice.requires) return true;
+    const statReq = choice.requires.stats;
+    if (statReq) {
+      if (statReq.health !== undefined && player.stats.health < statReq.health) return false;
+      if (statReq.mana !== undefined && player.stats.mana < statReq.mana) return false;
+      if (statReq.gold !== undefined && player.stats.gold < statReq.gold) return false;
+    }
+    if (choice.requires.item && !player.inventory.includes(choice.requires.item)) return false;
+    return true;
+  };
+
+  const applyChoice = (choice: Choice) => {
+    const nextNode = story.nodes[choice.next];
+    if (!nextNode) return;
+
+    setPlayer((prev) => {
+      const nextStats = { ...prev.stats };
+      const effects = choice.effects?.stats;
+      if (effects) {
+        if (effects.health !== undefined) nextStats.health = clamp(nextStats.health + effects.health, 0, 12);
+        if (effects.mana !== undefined) nextStats.mana = clamp(nextStats.mana + effects.mana, 0, 12);
+        if (effects.gold !== undefined) nextStats.gold = clamp(nextStats.gold + effects.gold, 0, 99);
+      }
+
+      const nextInventory = new Set(prev.inventory);
+      choice.effects?.addItems?.forEach((id) => nextInventory.add(id));
+      choice.effects?.removeItems?.forEach((id) => nextInventory.delete(id));
+
+      return {
+        stats: nextStats,
+        inventory: Array.from(nextInventory),
+      };
+    });
+
+    if (choice.outcome) {
+      setLog((prev) => [...prev, { id: crypto.randomUUID(), text: choice.outcome }].slice(-6));
+    }
+    setCurrentNodeId(choice.next);
+  };
+
+  const isEnding = currentNode.ending !== null && currentNode.ending !== undefined;
 
   return (
-    <div className="relative w-full h-screen bg-slate-900 text-white select-none overflow-hidden font-sans">
-      {gameState === 'START' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-50 p-4">
-          <h1 className="text-6xl md:text-8xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-blue-500 text-center medieval-font">
-            SPELL SLINGER
-          </h1>
-          <p className="text-xl mb-4 text-slate-400 italic text-center">"Guns and Grimoires - A Wizard's New Arsenal"</p>
-          <div className="text-center mb-12">
-             <p className="text-lg text-yellow-500 animate-pulse pixel-font mb-2 uppercase">SURVIVE 1 MINUTE TO ADVANCE LEVEL</p>
-             <p className="text-sm text-slate-500 pixel-font uppercase">CLEARE 10 STAGES TO TRIUMPH</p>
-          </div>
-          <button 
-            onClick={startCustomization}
-            className="pixel-font px-8 py-4 bg-purple-600 hover:bg-purple-500 transition-colors border-4 border-white shadow-[0_0_20px_rgba(168,85,247,0.5)]"
-          >
-            CUSTOMIZE WIZARD
-          </button>
+    <div className="app">
+      <header className="hero">
+        <div className="hero__glow" />
+        <div className="hero__content">
+          <span className="hero__tag">SpellSlinger: The Quiet Edition</span>
+          <h1>Wizard with a Gun</h1>
+          <p>
+            A data-driven tale of hexes, hextech, and hard choices. No APIs. Just spells, steel, and story.
+          </p>
         </div>
-      )}
-
-      {gameState === 'CUSTOMIZE' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 z-50 p-4 overflow-y-auto">
-          <h2 className="text-4xl font-bold mb-8 text-blue-400 pixel-font">WIZARD ORIGINS</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full bg-slate-800/80 p-8 rounded-2xl border-2 border-slate-700 shadow-2xl">
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold border-b border-slate-700 pb-2">Appearance</h3>
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Robe Color</label>
-                <input 
-                  type="color" 
-                  value={appearance.robeColor} 
-                  onChange={(e) => setAppearance({...appearance, robeColor: e.target.value})}
-                  className="w-full h-10 rounded bg-transparent cursor-pointer"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Hat Style</label>
-                <div className="flex gap-2">
-                  {(['pointy', 'wide', 'hood'] as const).map(style => (
-                    <button 
-                      key={style}
-                      onClick={() => setAppearance({...appearance, hatStyle: style})}
-                      className={`flex-1 py-2 px-3 text-xs uppercase border ${appearance.hatStyle === style ? 'bg-blue-600 border-white' : 'bg-slate-700 border-slate-600'}`}
-                    >
-                      {style}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Beard</label>
-                <div className="flex gap-2">
-                  {(['none', 'short', 'long'] as const).map(style => (
-                    <button 
-                      key={style}
-                      onClick={() => setAppearance({...appearance, beardStyle: style})}
-                      className={`flex-1 py-2 px-3 text-xs uppercase border ${appearance.beardStyle === style ? 'bg-blue-600 border-white' : 'bg-slate-700 border-slate-600'}`}
-                    >
-                      {style}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        <div className="hero__stats">
+          <div className="stat">
+            <span>Health</span>
+            <div className="meter">
+              <div className="meter__fill" style={{ width: `${(player.stats.health / 12) * 100}%` }} />
             </div>
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold border-b border-slate-700 pb-2">Stats & Spells</h3>
-              <div className="space-y-4">
-                {Object.entries(stats).map(([key, val]) => (
-                  <div key={key}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="capitalize">{key}</span>
-                      <span>{val}</span>
-                    </div>
-                    <input 
-                      type="range" min="1" max="10" 
-                      value={val} 
-                      onChange={(e) => setStats({...stats, [key]: parseInt(e.target.value)})}
-                      className="w-full accent-blue-500"
-                    />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Starting Spell (Staff Modification)</label>
-                <select 
-                  className="w-full bg-slate-700 border border-slate-600 p-2 rounded"
-                  value={startingSpell}
-                  onChange={(e) => setStartingSpell(e.target.value as any)}
-                >
-                  <option value="fireball">Fireball (Standard)</option>
-                  <option value="frostbolt">Frostbolt (Ice Damage)</option>
-                  <option value="heal">Life-Link (Healing Focus)</option>
-                </select>
-              </div>
-            </div>
+            <strong>{player.stats.health}</strong>
           </div>
-          <button 
-            onClick={finalizePlayer}
-            className="mt-8 pixel-font px-12 py-4 bg-green-600 hover:bg-green-500 transition-colors border-4 border-white"
-          >
-            ENTER THE FRAY
-          </button>
-        </div>
-      )}
-
-      {gameState === 'PLAYING' && player && (
-        <GameCanvas 
-          playerInitial={player} 
-          onLevelUp={handleLevelUp} 
-          onGameOver={handleGameOver}
-          onWin={handleWin}
-        />
-      )}
-
-      {gameState === 'LEVEL_UP' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 z-50 p-8">
-          <h2 className="text-4xl font-bold mb-4 text-yellow-400 pixel-font">ASCENSION</h2>
-          <p className="mb-8 text-slate-300">Choose your arcane blessing for Level {player ? player.level + 1 : '?'}:</p>
-          {loadingAI ? (
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-sm italic animate-pulse">Consulting the ancient Grimoire...</p>
+          <div className="stat">
+            <span>Mana</span>
+            <div className="meter meter--mana">
+              <div className="meter__fill" style={{ width: `${(player.stats.mana / 12) * 100}%` }} />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
-              {powerUpOptions.map((opt, i) => (
-                <div 
-                  key={i}
-                  onClick={() => selectPowerUp(opt)}
-                  className="bg-slate-800 border-2 border-slate-700 p-6 rounded-xl hover:border-yellow-400 hover:bg-slate-700 cursor-pointer transition-all transform hover:-translate-y-1 group"
-                >
-                  <h3 className="text-xl font-bold text-yellow-400 mb-2 group-hover:scale-105 transition-transform">{opt.name}</h3>
-                  <p className="text-sm text-slate-300 italic mb-4">"{opt.description}"</p>
-                  <div className="text-xs font-mono uppercase tracking-wider text-slate-500">
-                    +{opt.attributeAffected} boost
-                  </div>
-                </div>
+            <strong>{player.stats.mana}</strong>
+          </div>
+          <div className="stat">
+            <span>Gold</span>
+            <div className="meter meter--gold">
+              <div className="meter__fill" style={{ width: `${(player.stats.gold / 20) * 100}%` }} />
+            </div>
+            <strong>{player.stats.gold}</strong>
+          </div>
+        </div>
+      </header>
+
+      <main className="play">
+        <section className="scene">
+          <div className="scene__frame">
+            <div className="scene__title">
+              <span className="scene__chapter">{currentNode.chapter}</span>
+              <h2>{currentNode.title}</h2>
+            </div>
+            <div className="scene__body">
+              {currentNode.body.map((line, index) => (
+                <p key={`${currentNodeId}-${index}`}>{line}</p>
               ))}
             </div>
-          )}
-        </div>
-      )}
+            {currentNode.outcome && <div className="scene__outcome">{currentNode.outcome}</div>}
 
-      {(gameState === 'GAME_OVER' || gameState === 'WIN') && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-6 text-center">
-          <h2 className={`text-6xl font-bold mb-4 ${gameState === 'WIN' ? 'text-green-500' : 'text-red-600'} pixel-font`}>
-            {gameState === 'WIN' ? 'MASTER WIZARD' : 'DEFEATED'}
-          </h2>
-          <p className="text-2xl text-slate-300 mb-2">{gameState === 'WIN' ? `You cleared Stage 10 and survived the mystical onslaught!` : `You fell at Level ${player?.level}`}</p>
-          <p className="text-xl text-yellow-400 mb-8">Final Score: {score}</p>
-          <div className="max-w-md bg-slate-800/50 p-6 rounded-lg border border-slate-700 mb-12">
-            <p className="italic text-lg text-slate-300">"{gameState === 'WIN' ? 'The trial of ten is complete. Your arcane prowess is unmatched.' : deathMessage}"</p>
+            <div className="scene__choices">
+              {currentNode.choices.length === 0 && (
+                <button className="choice choice--primary" onClick={resetGame}>
+                  Begin anew
+                </button>
+              )}
+              {currentNode.choices.map((choice) => {
+                const canUse = meetsRequirement(choice);
+                return (
+                  <button
+                    key={choice.id}
+                    className={`choice ${canUse ? '' : 'choice--locked'}`}
+                    disabled={!canUse || isEnding}
+                    onClick={() => applyChoice(choice)}
+                  >
+                    <span>{choice.text}</span>
+                    {!canUse && <em>{choice.lockedText ?? 'You lack the means.'}</em>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {isEnding && (
+              <div className="ending">
+                <strong>{currentNode.ending?.label}</strong>
+                <p>{currentNode.ending?.text}</p>
+                <button className="choice choice--primary" onClick={resetGame}>
+                  Replay the legend
+                </button>
+              </div>
+            )}
           </div>
-          <button 
-            onClick={() => setGameState('START')}
-            className="pixel-font px-8 py-4 bg-blue-600 hover:bg-blue-500 transition-colors border-4 border-white"
-          >
-            RETURN TO MENU
-          </button>
-        </div>
-      )}
+        </section>
+
+        <aside className="sidebar">
+          <div className="panel">
+            <h3>Satchel</h3>
+            <ul className="inventory">
+              {player.inventory.length === 0 && <li className="inventory__empty">Nothing but lint.</li>}
+              {player.inventory.map((itemId) => {
+                const item = itemIndex.get(itemId);
+                return (
+                  <li key={itemId}>
+                    <strong>{item?.name ?? itemId}</strong>
+                    <span>{item?.description ?? 'An unmarked relic.'}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <div className="panel">
+            <h3>Chronicle</h3>
+            <div className="log">
+              {log.length === 0 && <p className="log__empty">Your tale has yet to begin.</p>}
+              {log.map((entry) => (
+                <p key={entry.id}>{entry.text}</p>
+              ))}
+            </div>
+          </div>
+          <div className="panel panel--hint">
+            <h3>How to Play</h3>
+            <p>Choose a path, watch your stats, and collect artifacts to unlock hidden routes.</p>
+          </div>
+        </aside>
+      </main>
     </div>
   );
 };

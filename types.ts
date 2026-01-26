@@ -1,86 +1,68 @@
-
-export interface Vector {
-  x: number;
-  y: number;
-}
-
-export interface Appearance {
-  robeColor: string;
-  hatStyle: 'pointy' | 'wide' | 'hood';
-  beardStyle: 'none' | 'short' | 'long';
-}
-
-export interface Stats {
-  intelligence: number; // Damage multiplier
-  mana: number;        // Fire rate multiplier
-  health: number;      // Max health base
-}
-
-export interface Weapon {
-  name: string;
-  type: 'gun' | 'staff';
-  damage: number;
-  fireRate: number; // ms between shots
-  lastShot: number;
-  bulletSpeed: number;
-  spread: number;
-  color: string;
-  description: string;
-  bulletType: 'arcane' | 'firebook' | 'frost' | 'heal';
-}
-
-export interface Player {
-  pos: Vector;
+export interface PlayerStats {
   health: number;
-  maxHealth: number;
-  xp: number;
-  level: number;
-  appearance: Appearance;
-  stats: Stats;
-  weapons: Weapon[];
-  currentWeaponIndex: number;
+  mana: number;
+  gold: number;
 }
 
-export interface Bullet {
-  pos: Vector;
-  vel: Vector;
-  damage: number;
-  color: string;
+export interface PlayerState {
+  stats: PlayerStats;
+  inventory: string[];
+}
+
+export interface ChoiceRequirement {
+  stats?: Partial<PlayerStats>;
+  item?: string;
+}
+
+export interface ChoiceEffects {
+  stats?: Partial<PlayerStats>;
+  addItems?: string[];
+  removeItems?: string[];
+}
+
+export interface Choice {
   id: string;
-  type: Weapon['bulletType'];
-  rotation?: number;
+  text: string;
+  next: string;
+  outcome?: string;
+  lockedText?: string;
+  requires?: ChoiceRequirement;
+  effects?: ChoiceEffects;
 }
 
-export interface Enemy {
+export interface StoryNode {
   id: string;
-  pos: Vector;
-  health: number;
-  maxHealth: number;
-  speed: number;
-  type: 'slime' | 'goblin' | 'wraith' | 'boss';
-  xpValue: number;
-  sizeMultiplier?: number;
+  chapter: string;
+  title: string;
+  body: string[];
+  outcome?: string;
+  choices: Choice[];
+  ending?: {
+    label: string;
+    text: string;
+  };
 }
 
-export interface Particle {
-  pos: Vector;
-  vel: Vector;
-  life: number;
-  color: string;
+export interface StoryData {
+  start: string;
+  player: {
+    stats: PlayerStats;
+    inventory: string[];
+  };
+  nodes: Record<string, StoryNode>;
 }
 
-export interface Collectible {
+export interface GameLogEntry {
   id: string;
-  pos: Vector;
-  vel: Vector;
-  type: 'heart';
-  life: number; // For fading away
+  text: string;
 }
 
-export type GameState = 'START' | 'CUSTOMIZE' | 'PLAYING' | 'LEVEL_UP' | 'GAME_OVER' | 'WIN';
-
-export interface PowerUp {
+export interface ItemDefinition {
+  id: string;
   name: string;
   description: string;
-  effect: (player: Player) => Player;
+}
+
+export interface ItemsData {
+  items: ItemDefinition[];
 }

@@ -1,0 +1,338 @@
+{
+  "start": "vault-landing",
+  "player": {
+    "stats": {
+      "health": 9,
+      "mana": 6,
+      "gold": 4
+    },
+    "inventory": ["powdered-sigil"]
+  },
+  "nodes": {
+    "vault-landing": {
+      "id": "vault-landing",
+      "chapter": "Prologue",
+      "title": "The Rattling Lift",
+      "body": [
+        "The vault lift coughs you into the undercity, a place where lanterns burn on borrowed hours.",
+        "Your coat smells of gun-oil and old incantations. The city expects payment in either."
+      ],
+      "outcome": "A neon sigil hums to life, waiting for your first move.",
+      "choices": [
+        {
+          "id": "inspect-gun",
+          "text": "Inspect the arcane revolver etched to your hip.",
+          "next": "gunner-oath",
+          "outcome": "The cylinder clicks like a prayer answered.",
+          "effects": {
+            "addItems": ["arcane-revolver"]
+          }
+        },
+        {
+          "id": "meditate",
+          "text": "Meditate and refill your sigils.",
+          "next": "sigil-surge",
+          "outcome": "Your breath steadies; mana settles in your palms.",
+          "effects": {
+            "stats": { "mana": 2 }
+          }
+        },
+        {
+          "id": "kick-gate",
+          "text": "Kick open the lift gate and stride into the dust.",
+          "next": "dust-alley",
+          "outcome": "You leave a dent in the vault for the tax collectors.",
+          "effects": {
+            "stats": { "health": -1, "gold": 1 }
+          }
+        }
+      ]
+    },
+    "gunner-oath": {
+      "id": "gunner-oath",
+      "chapter": "Prologue",
+      "title": "Gunner's Oath",
+      "body": [
+        "The revolver is ancient tech: six chambers for six spells, each one hungry.",
+        "Its hum warms your fingers, eager for a target."
+      ],
+      "outcome": "You whisper the oath and the barrel answers back.",
+      "choices": [
+        {
+          "id": "carve-rune",
+          "text": "Carve a warding rune into the barrel.",
+          "next": "dust-alley",
+          "outcome": "The metal drinks the rune and shines with a pale current.",
+          "effects": {
+            "addItems": ["rune-etched-charm"],
+            "stats": { "mana": -1 }
+          }
+        },
+        {
+          "id": "holster",
+          "text": "Holster it and move on.",
+          "next": "dust-alley",
+          "outcome": "A simple choice, but the city remembers every shortcut."
+        }
+      ]
+    },
+    "sigil-surge": {
+      "id": "sigil-surge",
+      "chapter": "Prologue",
+      "title": "Sigil Surge",
+      "body": [
+        "You trace your powdered sigil in the air, drawing power from the street lamps.",
+        "Mana rushes like rainwater through a gutter."
+      ],
+      "outcome": "The magic settles, bright and obedient.",
+      "choices": [
+        {
+          "id": "to-alley",
+          "text": "Head into the alleyways.",
+          "next": "dust-alley",
+          "outcome": "Your boots meet the grit of the undercity."
+        }
+      ]
+    },
+    "dust-alley": {
+      "id": "dust-alley",
+      "chapter": "Act I",
+      "title": "The Dust Alley",
+      "body": [
+        "Steam coalesces into shapes that might be ghosts or debt collectors.",
+        "Three paths call to you: an apothecary, a clocktower, and the clatter of a rail bridge."
+      ],
+      "choices": [
+        {
+          "id": "apothecary",
+          "text": "Slip into the apothecary of glass and ash.",
+          "next": "apothecary"
+        },
+        {
+          "id": "clocktower",
+          "text": "Climb toward the clocktower spire.",
+          "next": "clocktower"
+        },
+        {
+          "id": "bridge",
+          "text": "Follow the train whistle to the rattlebridge.",
+          "next": "rattlebridge"
+        }
+      ]
+    },
+    "apothecary": {
+      "id": "apothecary",
+      "chapter": "Act I",
+      "title": "Ash Apothecary",
+      "body": [
+        "Shelves groan under vials that glow, hiss, and occasionally sing.",
+        "The apothecary squints at your gun and grins with a mouth of brass."
+      ],
+      "choices": [
+        {
+          "id": "buy-tonic",
+          "text": "Trade two gold for an ember tonic.",
+          "next": "rumors",
+          "outcome": "The tonic burns down your throat, leaving warmth in its wake.",
+          "requires": { "stats": { "gold": 2 } },
+          "lockedText": "You need two gold.",
+          "effects": {
+            "stats": { "gold": -2, "health": 2 },
+            "addItems": ["ember-tonic"]
+          }
+        },
+        {
+          "id": "ask-rumors",
+          "text": "Ask for rumors and pay with a smile.",
+          "next": "rumors",
+          "outcome": "He points with a bone spoon. \"Clocktower hides a storm key.\""
+        },
+        {
+          "id": "leave",
+          "text": "Back to the alley.",
+          "next": "dust-alley"
+        }
+      ]
+    },
+    "rumors": {
+      "id": "rumors",
+      "chapter": "Act I",
+      "title": "The Brass Rumor",
+      "body": [
+        "\"Storm key wakes the bridge,\" he mutters. \"But the tower bites.\"",
+        "You pocket the warning like a coin."
+      ],
+      "choices": [
+        {
+          "id": "tower-from-rumor",
+          "text": "Seek the clocktower.",
+          "next": "clocktower"
+        },
+        {
+          "id": "bridge-from-rumor",
+          "text": "Take your chances at the rattlebridge.",
+          "next": "rattlebridge"
+        }
+      ]
+    },
+    "clocktower": {
+      "id": "clocktower",
+      "chapter": "Act II",
+      "title": "Clocktower Throat",
+      "body": [
+        "The gears hum a tune older than the city.",
+        "Static crawls along the iron rails leading upward."
+      ],
+      "choices": [
+        {
+          "id": "wind-rune",
+          "text": "Wind the tower with your rune-etched charm.",
+          "next": "storm-call",
+          "requires": { "item": "rune-etched-charm" },
+          "lockedText": "You need the rune-etched charm.",
+          "outcome": "Your charm resonates, and the storm sleeps."
+        },
+        {
+          "id": "climb-bare",
+          "text": "Climb without warding.",
+          "next": "shockfall",
+          "outcome": "The tower bites. Lightning kisses your collar.",
+          "effects": { "stats": { "health": -3 } }
+        },
+        {
+          "id": "retreat",
+          "text": "Retreat to the alley.",
+          "next": "dust-alley"
+        }
+      ]
+    },
+    "storm-call": {
+      "id": "storm-call",
+      "chapter": "Act II",
+      "title": "Storm Call",
+      "body": [
+        "You find the storm key hanging inside a nest of copper filaments.",
+        "It is cold and loud, like a key that remembers every lock."
+      ],
+      "outcome": "The storm key thrums in your pocket.",
+      "choices": [
+        {
+          "id": "take-key",
+          "text": "Take the storm key and descend.",
+          "next": "rattlebridge",
+          "effects": { "addItems": ["storm-key"] }
+        }
+      ]
+    },
+    "shockfall": {
+      "id": "shockfall",
+      "chapter": "Act II",
+      "title": "Shockfall",
+      "body": [
+        "You land hard in a nest of sparking wires.",
+        "The tower laughs with thunder in your ears."
+      ],
+      "outcome": "Your hands shake, but you can still grip the revolver.",
+      "choices": [
+        {
+          "id": "limp-apothecary",
+          "text": "Limp to the apothecary.",
+          "next": "apothecary"
+        },
+        {
+          "id": "crawl-bridge",
+          "text": "Crawl toward the rattlebridge.",
+          "next": "rattlebridge"
+        }
+      ]
+    },
+    "rattlebridge": {
+      "id": "rattlebridge",
+      "chapter": "Finale",
+      "title": "The Rattlebridge",
+      "body": [
+        "The bridge shivers as the ghost train approaches.",
+        "A lock of stormlight bars the far exit. The train crew watches with hollow eyes."
+      ],
+      "choices": [
+        {
+          "id": "use-key",
+          "text": "Use the storm key to silence the lock.",
+          "next": "finale-win",
+          "requires": { "item": "storm-key" },
+          "lockedText": "You need the storm key.",
+          "outcome": "The lock sings, then opens like a tired mouth."
+        },
+        {
+          "id": "force-barrier",
+          "text": "Burn mana to force the barrier.",
+          "next": "finale-risk",
+          "requires": { "stats": { "mana": 5 } },
+          "lockedText": "You need at least 5 mana.",
+          "outcome": "Your palms blaze, and the barrier splits."
+        },
+        {
+          "id": "stand-ground",
+          "text": "Stand your ground and duel the train crew.",
+          "next": "finale-lose",
+          "outcome": "Their eyes shine brighter than your resolve.",
+          "effects": { "stats": { "health": -4 } }
+        }
+      ]
+    },
+    "finale-risk": {
+      "id": "finale-risk",
+      "chapter": "Finale",
+      "title": "Stormbound",
+      "body": [
+        "The storm obeys, but the cost is steep. Your sigils dim to embers.",
+        "Only one move remains: bind the bridge or be bound to it."
+      ],
+      "choices": [
+        {
+          "id": "bind-bridge",
+          "text": "Spend the last of your mana to bind the bridge.",
+          "next": "finale-win",
+          "requires": { "stats": { "mana": 2 } },
+          "lockedText": "You need 2 mana.",
+          "outcome": "You seal the bridge and claim the rail coin.",
+          "effects": { "stats": { "mana": -2, "gold": 6 } }
+        },
+        {
+          "id": "yield",
+          "text": "Yield and step back into the shadows.",
+          "next": "finale-lose",
+          "outcome": "The train whistles without you."
+        }
+      ]
+    },
+    "finale-win": {
+      "id": "finale-win",
+      "chapter": "Finale",
+      "title": "Railborn Crown",
+      "body": [
+        "The ghost train bows, rails cooling beneath your boots.",
+        "You pocket the stormlight and walk into the dawn with a new legend."
+      ],
+      "ending": {
+        "label": "Victory",
+        "text": "The undercity will remember the wizard who tamed the bridge."
+      },
+      "choices": []
+    },
+    "finale-lose": {
+      "id": "finale-lose",
+      "chapter": "Finale",
+      "title": "Cold Rails",
+      "body": [
+        "The bridge shuts, and the storm drags its fingers across your coat.",
+        "Some legends are warnings more than songs."
+      ],
+      "ending": {
+        "label": "Defeat",
+        "text": "The city sleeps, and your name slips back into myth."
+      },
+      "choices": []
+    }
+  }
+}
