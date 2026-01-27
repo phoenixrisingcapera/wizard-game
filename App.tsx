@@ -136,7 +136,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-screen bg-slate-900 text-white select-none overflow-hidden font-sans">
+    <div className="relative w-full h-[100dvh] min-h-[100dvh] bg-slate-900 text-white select-none overflow-hidden font-sans">
       {gameState === 'START' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-50 p-4 overflow-y-auto">
           <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-4 sm:mb-6 md:mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-blue-500 text-center medieval-font">

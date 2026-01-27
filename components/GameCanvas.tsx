@@ -59,6 +59,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ playerInitial, onLevelUp, onGam
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         mousePosRef.current = { x: touch.clientX, y: touch.clientY };
@@ -71,6 +72,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ playerInitial, onLevelUp, onGam
       }
 
       if ('touches' in e && e.touches.length > 0) {
+        e.preventDefault();
         mousePosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
 
@@ -673,13 +675,16 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ playerInitial, onLevelUp, onGam
   };
 
   const setMovement = (key: string, value: boolean, e?: React.MouseEvent | React.TouchEvent) => {
-    if (e) e.stopPropagation();
+    if (e) {
+      e.stopPropagation();
+      if ('touches' in e) e.preventDefault();
+    }
     keysRef.current[key] = value;
   };
 
   return (
-    <div className="relative w-full h-full">
-      <canvas ref={canvasRef} className="w-full h-full block" />
+    <div className="relative w-full h-full game-canvas">
+      <canvas ref={canvasRef} className="w-full h-full block touch-none" />
       <div className="absolute bottom-8 left-8 flex flex-col items-center gap-2">
         <div className="grid grid-cols-3 gap-2">
           <div />
