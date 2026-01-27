@@ -1,6 +1,6 @@
-# SpellSlinger: The Quiet Edition
+# SpellSlinger: Wizard with a Gun
 
-Data-driven wizard story game built with Vite + React. No external APIs, no environment variables, and all assets are local.
+Wizard shooter built with Vite + React. No external APIs, no environment variables, and all assets are local.
 
 ## Run Locally
 
@@ -25,7 +25,7 @@ Data-driven wizard story game built with Vite + React. No external APIs, no envi
 
 No environment variables are required.
 
-## Story Data
+## Local Data
 
-- `data/story.json` controls nodes, choices, and outcomes.
-- `data/items.json` contains optional item definitions shown in the UI.
+- `data/powerups.json` defines level-up choices.
+- `data/deathMessages.json` defines game-over messages.

@@ -1,0 +1,10 @@
+{
+  "messages": [
+    "Score {score}, Level {level}. The undercity writes your name in ash.",
+    "You fell at Level {level}. The goblins are already looting your coat.",
+    "Score {score}. The spellbook closes itself and refuses to reopen.",
+    "Level {level} claimed you. The arcane revolver clicks empty.",
+    "You went down swinging. Score {score}. The city shrugs and moves on.",
+    "The storm took you at Level {level}. Even the ghosts look away."
+  ]
+}
