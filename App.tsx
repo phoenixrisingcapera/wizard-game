@@ -138,22 +138,22 @@ const App: React.FC = () => {
   return (
     <div className="relative w-full h-screen bg-slate-900 text-white select-none overflow-hidden font-sans">
       {gameState === 'START' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-50 p-4">
-          <h1 className="text-6xl md:text-8xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-blue-500 text-center medieval-font">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-50 p-4 overflow-y-auto">
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-4 sm:mb-6 md:mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-blue-500 text-center medieval-font">
             SPELL SLINGER
           </h1>
-          <p className="text-xl mb-4 text-slate-400 italic text-center">
+          <p className="text-base sm:text-xl mb-3 sm:mb-4 text-slate-400 italic text-center">
             "Guns and Grimoires - A Wizard&apos;s New Arsenal"
           </p>
-          <div className="text-center mb-12">
-            <p className="text-lg text-yellow-500 animate-pulse pixel-font mb-2 uppercase">
+          <div className="text-center mb-6 sm:mb-10 md:mb-12">
+            <p className="text-sm sm:text-lg text-yellow-500 animate-pulse pixel-font mb-2 uppercase">
               SURVIVE 1 MINUTE TO ADVANCE LEVEL
             </p>
             <p className="text-sm text-slate-500 pixel-font uppercase">CLEAR 120 STAGES TO TRIUMPH</p>
           </div>
           <button
             onClick={startCustomization}
-            className="pixel-font px-8 py-4 bg-purple-600 hover:bg-purple-500 transition-colors border-4 border-white shadow-[0_0_20px_rgba(168,85,247,0.5)]"
+            className="pixel-font px-6 sm:px-8 py-3 sm:py-4 bg-purple-600 hover:bg-purple-500 transition-colors border-4 border-white shadow-[0_0_20px_rgba(168,85,247,0.5)]"
           >
             CUSTOMIZE WIZARD
           </button>
