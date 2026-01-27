@@ -152,8 +152,8 @@ const App: React.FC = () => {
             <p className="text-sm text-slate-500 pixel-font uppercase">CLEAR 120 STAGES TO TRIUMPH</p>
           </div>
           <button
-            onClick={startCustomization}
-            className="pixel-font px-6 sm:px-8 py-3 sm:py-4 bg-purple-600 hover:bg-purple-500 transition-colors border-4 border-white shadow-[0_0_20px_rgba(168,85,247,0.5)]"
+            onPointerUp={startCustomization}
+            className="pixel-font px-6 sm:px-8 py-3 sm:py-4 bg-purple-600 hover:bg-purple-500 transition-colors border-4 border-white shadow-[0_0_20px_rgba(168,85,247,0.5)] touch-manipulation"
           >
             CUSTOMIZE WIZARD
           </button>
@@ -243,8 +243,8 @@ const App: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={finalizePlayer}
-            className="mt-8 pixel-font px-12 py-4 bg-green-600 hover:bg-green-500 transition-colors border-4 border-white"
+            onPointerUp={finalizePlayer}
+            className="mt-8 pixel-font px-12 py-4 bg-green-600 hover:bg-green-500 transition-colors border-4 border-white touch-manipulation"
           >
             ENTER THE FRAY
           </button>
@@ -303,8 +303,8 @@ const App: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={() => setGameState('START')}
-            className="pixel-font px-8 py-4 bg-blue-600 hover:bg-blue-500 transition-colors border-4 border-white"
+            onPointerUp={() => setGameState('START')}
+            className="pixel-font px-8 py-4 bg-blue-600 hover:bg-blue-500 transition-colors border-4 border-white touch-manipulation"
           >
             RETURN TO MENU
           </button>
