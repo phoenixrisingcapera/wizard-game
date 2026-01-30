@@ -129,13 +129,22 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ playerInitial, onLevelUp, onGam
         (['slime', 'goblin', 'wraith'][Math.floor(Math.random() * Math.min(3, 1 + Math.floor(level / 5)))] as Enemy['type']);
 
       let health = 15 + level * 8 + Math.pow(level, 1.2) * 2;
-      let speed = 1.0 + level * 0.04;
+      let speed = 0.7;
       let xpValue = 10 + Math.floor(level * 0.5);
       let sizeMultiplier = 1;
 
+      const baseSpeedByType: Record<Enemy['type'], number> = {
+        slime: 0.55,
+        goblin: 0.65,
+        wraith: 0.75,
+        boss: 0.6,
+      };
+      const speedScale = 0.3 + (level - 1) * 0.02;
+      speed = baseSpeedByType[type] * speedScale;
+
       if (type === 'boss') {
         health = level * 250 + Math.pow(level, 1.5);
-        speed = 0.7 + level * 0.015;
+        speed = baseSpeedByType.boss * speedScale;
         xpValue = level * 150;
         sizeMultiplier = 4.0;
       }
@@ -409,32 +418,78 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ playerInitial, onLevelUp, onGam
           ctx.shadowColor = skinColor;
         }
 
-        ctx.fillStyle = tunicColor;
-        ctx.beginPath();
-        ctx.moveTo(-10, 15);
-        ctx.lineTo(10, 15);
-        ctx.lineTo(0, -5);
-        ctx.fill();
-        ctx.strokeStyle = skinColor;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(-8, 5);
-        ctx.lineTo(-14, 12);
-        ctx.moveTo(8, 5);
-        ctx.lineTo(14, 12);
-        ctx.stroke();
-        ctx.fillStyle = skinColor;
-        ctx.beginPath();
-        ctx.arc(0, -8, 10, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(-8, -10);
-        ctx.lineTo(-20, -18);
-        ctx.lineTo(-8, -2);
-        ctx.moveTo(8, -10);
-        ctx.lineTo(20, -18);
-        ctx.lineTo(8, -2);
-        ctx.fill();
+        if (e.type === 'slime') {
+          ctx.fillStyle = skinColor;
+          ctx.beginPath();
+          ctx.arc(0, 2, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = tunicColor;
+          ctx.beginPath();
+          ctx.arc(-6, -2, 4, 0, Math.PI * 2);
+          ctx.arc(6, -2, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = eyeColor;
+          ctx.beginPath();
+          ctx.arc(-4, -4, 1.8, 0, Math.PI * 2);
+          ctx.arc(4, -4, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (e.type === 'wraith') {
+          ctx.globalAlpha = 0.45;
+          ctx.fillStyle = skinColor;
+          ctx.beginPath();
+          ctx.moveTo(0, -18);
+          ctx.lineTo(18, 18);
+          ctx.lineTo(8, 10);
+          ctx.lineTo(0, 18);
+          ctx.lineTo(-8, 10);
+          ctx.lineTo(-18, 18);
+          ctx.closePath();
+          ctx.fill();
+          ctx.globalAlpha = 0.75;
+          ctx.fillStyle = tunicColor;
+          ctx.beginPath();
+          ctx.arc(0, -6, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.fillStyle = tunicColor;
+          ctx.beginPath();
+          ctx.moveTo(-10, 15);
+          ctx.lineTo(10, 15);
+          ctx.lineTo(0, -5);
+          ctx.fill();
+          ctx.strokeStyle = skinColor;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(-8, 5);
+          ctx.lineTo(-14, 12);
+          ctx.moveTo(8, 5);
+          ctx.lineTo(14, 12);
+          ctx.stroke();
+          ctx.fillStyle = skinColor;
+          ctx.beginPath();
+          ctx.arc(0, -8, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(-8, -10);
+          ctx.lineTo(-20, -18);
+          ctx.lineTo(-8, -2);
+          ctx.moveTo(8, -10);
+          ctx.lineTo(20, -18);
+          ctx.lineTo(8, -2);
+          ctx.fill();
+          if (e.type === 'goblin') {
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.moveTo(-6, -20);
+            ctx.lineTo(-12, -30);
+            ctx.lineTo(-2, -26);
+            ctx.moveTo(6, -20);
+            ctx.lineTo(12, -30);
+            ctx.lineTo(2, -26);
+            ctx.fill();
+          }
+        }
 
         if (e.type === 'boss') {
           ctx.fillStyle = '#fbbf24';
@@ -450,16 +505,18 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ playerInitial, onLevelUp, onGam
           ctx.fill();
         }
 
-        ctx.fillStyle = eyeColor;
-        ctx.beginPath();
-        ctx.arc(-4, -10, 2, 0, Math.PI * 2);
-        ctx.arc(4, -10, 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        ctx.arc(-4, -10, 0.8, 0, Math.PI * 2);
-        ctx.arc(4, -10, 0.8, 0, Math.PI * 2);
-        ctx.fill();
+        if (e.type !== 'slime' && e.type !== 'wraith') {
+          ctx.fillStyle = eyeColor;
+          ctx.beginPath();
+          ctx.arc(-4, -10, 2, 0, Math.PI * 2);
+          ctx.arc(4, -10, 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = 'black';
+          ctx.beginPath();
+          ctx.arc(-4, -10, 0.8, 0, Math.PI * 2);
+          ctx.arc(4, -10, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
         ctx.restore();
 
         const barW = e.type === 'boss' ? 200 : 40;
