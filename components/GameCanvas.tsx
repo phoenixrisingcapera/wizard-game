@@ -135,7 +135,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ playerInitial, onLevelUp, onGam
 
       const baseSpeedByType: Record<Enemy['type'], number> = {
         slime: 0.55,
-        goblin: 0.65,
+        goblin: 0.03,
         wraith: 0.75,
         boss: 0.6,
       };
